@@ -10,25 +10,34 @@ import (
 	"golang.org/x/text/message"
 )
 
-func solutionListener(solutionsChannel chan []string) {
-	count := 0
+func solutionListener(channels colorsortsolver.Channels) {
+	workerCount := 0
+	solutionCount := 0
 	shortestSolution := math.MaxInt
 
 	printer := message.NewPrinter(language.English)
 
-	for solution := range solutionsChannel {
-		count++
+	for {
+		select {
+		case solution := <-channels.Solutions:
+			solutionCount++
 
-		if len(solution) < shortestSolution {
-			printer.Printf("Solution %d, %d steps\n", count, len(solution))
-			for index, step := range solution {
-				fmt.Printf("%4d: %s\n", index+1, step)
+			if len(solution) < shortestSolution {
+				printer.Printf("Solution %d, %d steps\n", solutionCount, len(solution))
+				for index, step := range solution {
+					fmt.Printf("%4d: %s\n", index+1, step)
+				}
+				shortestSolution = len(solution)
 			}
-			shortestSolution = len(solution)
-		}
 
-		if count%1000000 == 0 {
-			printer.Printf("Solution %d, %d steps\n", count, len(solution))
+			if solutionCount%1000000 == 0 {
+				printer.Printf("Solution %d, %d workers outstanding\n", solutionCount, workerCount)
+			}
+		case increment := <-channels.WorkerCount:
+			workerCount += increment
+			if workerCount == 0 {
+				return
+			}
 		}
 	}
 }
@@ -41,8 +50,8 @@ func main() {
 	fileContentsString := string(fileContents)
 	baseRack := colorsortsolver.RackFromCSV(fileContentsString)
 
-	solutionsChannel := make(chan []string, 100)
+	channels := colorsortsolver.NewChannels()
 
-	baseRack.AttemptSolution(solutionsChannel)
-	solutionListener(solutionsChannel)
+	baseRack.AttemptSolution(channels)
+	solutionListener(channels)
 }

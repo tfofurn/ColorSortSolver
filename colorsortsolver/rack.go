@@ -60,7 +60,10 @@ func (r *Rack) Move(sourceIndex, destinationIndex int) Rack {
 	return Rack{steps: steps, tubes: tubes}
 }
 
-func (r *Rack) AttemptSolution(solutionChannel chan []string) bool {
+func (r *Rack) AttemptSolution(channels Channels) bool {
+	if len(r.steps) == 1 {
+		channels.WorkerCount <- 1
+	}
 	solved := false
 	for srcIndex, srcTube := range r.tubes {
 		for destIndex, destTube := range r.tubes {
@@ -69,12 +72,12 @@ func (r *Rack) AttemptSolution(solutionChannel chan []string) bool {
 			}
 			if destTube.CanReceiveFrom(srcTube) {
 				postMoveRack := r.Move(srcIndex, destIndex)
-				solved = solved || postMoveRack.CheckSolved(solutionChannel)
+				solved = solved || postMoveRack.CheckSolved(channels)
 				if !solved {
 					if len(r.steps) == 0 {
-						go postMoveRack.AttemptSolution(solutionChannel)
+						go postMoveRack.AttemptSolution(channels)
 					} else {
-						postMoveRack.AttemptSolution(solutionChannel)
+						postMoveRack.AttemptSolution(channels)
 					}
 				}
 			}
@@ -87,10 +90,13 @@ func (r *Rack) AttemptSolution(solutionChannel chan []string) bool {
 		}
 	}
 
+	if len(r.steps) == 1 {
+		channels.WorkerCount <- -1
+	}
 	return solved
 }
 
-func (r *Rack) CheckSolved(solutionChannel chan []string) bool {
+func (r *Rack) CheckSolved(channels Channels) bool {
 	capped, empty, mixed := 0, 0, 0
 	for index := range r.tubes {
 		tube := r.tubes[index]
@@ -104,7 +110,7 @@ func (r *Rack) CheckSolved(solutionChannel chan []string) bool {
 		}
 	}
 	if mixed == 0 {
-		solutionChannel <- r.steps
+		channels.Solutions <- r.steps
 		return true
 	}
 	return false
