@@ -77,7 +77,7 @@ func (r *Rack) AttemptSolution(channels Channels) bool {
 					if len(r.steps) == 0 {
 						go postMoveRack.AttemptSolution(channels)
 					} else {
-						postMoveRack.AttemptSolution(channels)
+						solved = solved || postMoveRack.AttemptSolution(channels)
 					}
 				}
 			}

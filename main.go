@@ -11,6 +11,7 @@ import (
 )
 
 func solutionListener(channels colorsortsolver.Channels) {
+	remainingWorkers := 0
 	workerCount := 0
 	solutionCount := 0
 	shortestSolution := math.MaxInt
@@ -31,11 +32,15 @@ func solutionListener(channels colorsortsolver.Channels) {
 			}
 
 			if solutionCount%1000000 == 0 {
-				printer.Printf("Solution %d, %d workers outstanding\n", solutionCount, workerCount)
+				printer.Printf("Solution %d, %d workers outstanding\n", solutionCount, remainingWorkers)
 			}
 		case increment := <-channels.WorkerCount:
-			workerCount += increment
-			if workerCount == 0 {
+			remainingWorkers += increment
+			if increment > 0 {
+				workerCount += 1
+			}
+			if remainingWorkers == 0 {
+				printer.Printf("All solvers have exited.  %d/%d workers found a valid solution.", solutionCount, workerCount)
 				return
 			}
 		}
