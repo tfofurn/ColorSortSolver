@@ -50,12 +50,10 @@ func (r *Rack) Move(sourceIndex, destinationIndex int) Rack {
 	for _, tube := range r.tubes {
 		tubes = append(tubes, tube.Copy())
 	}
-	sourceTube := tubes[sourceIndex]
-	destinationTube := tubes[destinationIndex]
+	sourceTube := &tubes[sourceIndex]
+	destinationTube := &tubes[destinationIndex]
 	color, amount = sourceTube.PourOutTop()
 	destinationTube.PourIn(color, amount)
-	tubes[sourceIndex] = sourceTube
-	tubes[destinationIndex] = destinationTube
 
 	return Rack{steps: steps, tubes: tubes}
 }
