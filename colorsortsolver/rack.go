@@ -70,7 +70,9 @@ func (r *Rack) AttemptSolution(channels Channels) bool {
 			}
 			if destTube.CanReceiveFrom(srcTube) {
 				postMoveRack := r.Move(srcIndex, destIndex)
-				solved = solved || postMoveRack.CheckSolved(channels)
+				if postMoveRack.tubes[srcIndex].IsEmpty() && postMoveRack.tubes[destIndex].IsCapped() {
+					solved = solved || postMoveRack.CheckSolved(channels)
+				}
 				if !solved {
 					if len(r.steps) == 0 {
 						go postMoveRack.AttemptSolution(channels)
