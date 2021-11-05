@@ -1,7 +1,7 @@
 package main
 
 import (
-	"colorsortsolver/colorsortsolver"
+	"colorsortsolver/solver"
 	"fmt"
 	"io/ioutil"
 	"math"
@@ -10,7 +10,7 @@ import (
 	"golang.org/x/text/message"
 )
 
-func solutionListener(channels colorsortsolver.Channels) {
+func solutionListener(channels solver.Channels) {
 	remainingWorkers := 0
 	workerCount := 0
 	solutionCount := 0
@@ -53,9 +53,9 @@ func main() {
 		fmt.Print(err)
 	}
 	fileContentsString := string(fileContents)
-	baseRack := colorsortsolver.RackFromCSV(fileContentsString)
+	baseRack := solver.RackFromCSV(fileContentsString)
 
-	channels := colorsortsolver.NewChannels()
+	channels := solver.NewChannels()
 
 	baseRack.AttemptSolution(channels)
 	solutionListener(channels)

@@ -1,4 +1,4 @@
-package colorsortsolver
+package solver
 
 import "fmt"
 

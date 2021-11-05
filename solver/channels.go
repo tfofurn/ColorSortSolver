@@ -1,4 +1,4 @@
-package colorsortsolver
+package solver
 
 type Channels struct {
 	WorkerCount chan int
