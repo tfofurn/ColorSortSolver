@@ -53,16 +53,17 @@ func (t *Tube) PourOutTop() (Color, int) {
 }
 
 func (destination *Tube) CanReceiveFrom(source Tube) bool {
-	if source.IsCapped() || source.IsEmpty() {
-		return false
-	}
-	sourceColor, sourceAmount := source.TopColor()
-	destinationColor, _ := destination.TopColor()
-	if sourceAmount > destination.Slack() {
+	if source.IsEmpty() || source.IsCapped() {
 		return false
 	}
 	if destination.IsEmpty() {
 		return !source.IsSingleColor()
+	}
+
+	sourceColor, sourceAmount := source.TopColor()
+	destinationColor, _ := destination.TopColor()
+	if sourceAmount > destination.Slack() {
+		return false
 	}
 
 	return sourceColor == destinationColor

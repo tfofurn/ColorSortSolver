@@ -64,6 +64,10 @@ func (r *Rack) AttemptSolution(channels Channels) bool {
 	}
 	solved := false
 	for srcIndex, srcTube := range r.tubes {
+		sourceTube := r.tubes[srcIndex]
+		if sourceTube.IsEmpty() || sourceTube.IsCapped() {
+			continue
+		}
 		for destIndex, destTube := range r.tubes {
 			if srcIndex == destIndex {
 				continue
