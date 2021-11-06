@@ -4,11 +4,16 @@ Ever see those color sorting mobile games?  The starting state is a bunch of tub
 
 I bought one of these apps and breezed through most of the levels.  I got stuck for a really long time on one, but eventually solved it.  Just a few levels later, I got really stuck.  That particular app allows buying an additional empty tube, which significantly reduces the difficulty, but what fun is that?  Enter the Color Sort Solver.
 
+# Input format
+
+The program reads a CSV file.  The top row is interpreted as the names of the tubes.  The rest are understood to be the colors in each tube from top to bottom.  Use any color names you like!
 # Known Issues
 
-**Hardcoded color names and file path.** Makes data entry a pain.
+**Hardcoded input file path.** You either need to alter `main.go` or rename your file to `sample/inciting-incident.csv`.
 
-**No intelligence.**  Brute force FTW!  This program considers literally every possible pairing of tubes at each stage and does a depth-first search of the solution space.  The only consideration of what's under the top color in a tube is to ascertain whether the tube is already monochromatic.  There's probably a good algorithm for computing fewest-steps solutions with less work.
+**Fixed tube height.**  There isn't any checking of the input file's line count.  If you have anything other than four rows of colors, expect bad behavior.
+
+**No intelligence.**  Brute force FTW!  This program considers nearly every possible pairing of tubes at each stage and does a depth-first search of the solution space.  The only consideration of what's under the top color in a tube is to ascertain whether the tube is already monochromatic.  There's probably a good algorithm for computing fewest-steps solutions with less work.
 
 **Not exhaustive.** There was a bug in the original termination logic that allowed the program to keep running after identifying a solution.  It claimed to have found *billions* of solutions for the inciting incident puzzle.  Solution 102,505,948 was the first to require only 38 steps!  While stumbling over a fast solution is fun when it happens, I'm content to not run my laptop's fan that hard.
 
