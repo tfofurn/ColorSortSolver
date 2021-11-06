@@ -46,14 +46,14 @@ func (r *Rack) Move(sourceIndex, destinationIndex int) Rack {
 	steps := make([]string, len(r.steps), len(r.steps)+1)
 	copy(steps, r.steps)
 	steps = append(steps, moveDescription)
-	tubes := make([]Tube, 0)
-	for _, tube := range r.tubes {
-		tubes = append(tubes, tube.Copy())
-	}
-	sourceTube := &tubes[sourceIndex]
-	destinationTube := &tubes[destinationIndex]
+	tubes := make([]Tube, len(r.tubes))
+	copy(tubes, r.tubes)
+	sourceTube := tubes[sourceIndex].Copy()
+	destinationTube := tubes[destinationIndex].Copy()
 	color, amount = sourceTube.PourOutTop()
 	destinationTube.PourIn(color, amount)
+	tubes[sourceIndex] = sourceTube
+	tubes[destinationIndex] = destinationTube
 
 	return Rack{steps: steps, tubes: tubes}
 }
