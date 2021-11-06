@@ -11,21 +11,21 @@ func TestTopEmpty(t *testing.T) {
 		t.Fatalf("Empty tubes should not report IsSingleColor or IsCapped.")
 	}
 
-	color, count := tube.TopColor()
-	if color != Empty {
-		t.Fatalf("Empty tube's top color should be Empty, not %v", color)
-	}
-	if count != 0 {
-		t.Fatalf("Empty tube's top count should be 0, not %v", count)
-	}
 	if tube.Slack() != TubeHeight {
 		t.Fatalf(`Empty tube's slack should be %d, got %d`, TubeHeight, tube.Slack())
 	}
+
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("Asking empty tube for TopColor didn't panic")
+		}
+	}()
+	_, _ = tube.TopColor() // should panic
 }
 
 func TestSingleColor(t *testing.T) {
 	tube := NewTube("T1")
-	color := Brown
+	color := Color(99)
 	emptyTube := NewTube("E")
 
 	slack := tube.Slack()
@@ -71,7 +71,7 @@ func TestSingleColor(t *testing.T) {
 
 func TestInclusion(t *testing.T) {
 	tube := NewTube("T17")
-	firstColor, secondColor := MediumGreen, DarkGreen
+	firstColor, secondColor := Color(100), Color(101)
 	tube.PourIn(firstColor, 1)
 	tube.PourIn(secondColor, 1)
 
@@ -90,7 +90,7 @@ func TestInclusion(t *testing.T) {
 
 func TestPourOutTop(t *testing.T) {
 	tube := NewTube("T5")
-	stillColor, movingColor := Cyan, Blue
+	stillColor, movingColor := Color(500), Color(505)
 	stillColorAmount, movingColorAmount := 1, 2
 	tube.PourIn(stillColor, stillColorAmount)
 	tube.PourIn(movingColor, movingColorAmount)
@@ -118,7 +118,7 @@ func TestPourOutTop(t *testing.T) {
 
 func TestEmptyCanReceive(t *testing.T) {
 	destination := NewTube("E")
-	baseColor, topColor := LightGreen, Orange
+	baseColor, topColor := Color(600), Color(400)
 
 	for iAmount := 1; iAmount < TubeHeight-1; iAmount++ {
 		source := NewTube("S")
@@ -145,7 +145,7 @@ func TestEmptyCanReceive(t *testing.T) {
 }
 
 func TestMatchCanReceive(t *testing.T) {
-	color := Pink
+	color := Color(1111)
 	for sourceAmount := 1; sourceAmount <= TubeHeight; sourceAmount++ {
 		for destinationAmount := 1; destinationAmount <= TubeHeight; destinationAmount++ {
 			sourceTube, destinationTube := NewTube("S"), NewTube("D")
@@ -161,7 +161,7 @@ func TestMatchCanReceive(t *testing.T) {
 }
 
 func TestMismatchCannotReceive(t *testing.T) {
-	sourceColor, destinationColor := Red, Blue
+	sourceColor, destinationColor := Color(75), Color(255)
 	sourceTube, destinationTube := NewTube("S"), NewTube("D")
 	sourceTube.PourIn(sourceColor, 1)
 	destinationTube.PourIn(destinationColor, 1)
@@ -177,19 +177,12 @@ func TestMismatchCannotReceive(t *testing.T) {
 func TestCopyEmpty(t *testing.T) {
 	empty := NewTube("e")
 	emptyCopy := empty.Copy()
-	if emptyCopy.Slack() != TubeHeight {
-		t.Fatalf("Copied empty tube should have slack %v, found %v", TubeHeight, emptyCopy.Slack())
-	}
-	copyColor, copyAmount := emptyCopy.TopColor()
-	if copyColor != Empty {
-		t.Fatalf("Copied empty should have top color %v, found %v", Empty, copyColor)
-	}
-	if copyAmount != 0 {
-		t.Fatalf("Copied empty should have top amount %v, found %v", 0, copyAmount)
+	if !emptyCopy.IsEmpty() {
+		t.Fatalf("Empty copy didn't report IsEmpty")
 	}
 }
 
-func checkForColor(t *testing.T, tube Tube, expected Color) {
+func checkForColor(t *testing.T, tube *Tube, expected Color) {
 	color, _ := tube.PourOutTop()
 	if color != expected {
 		t.Fatalf("First from BottomFill should have been %v, got %v", expected, color)
@@ -197,14 +190,15 @@ func checkForColor(t *testing.T, tube Tube, expected Color) {
 }
 
 func TestBottomFill(t *testing.T) {
+	brown, orange, pink, yellow := Color(2), Color(3), Color(5), Color(8)
 	tube := NewTube("t")
-	tube.BottomFill(Brown)
-	tube.BottomFill(Orange)
-	tube.BottomFill(Pink)
-	tube.BottomFill(Yellow)
+	tube.BottomFill(brown)
+	tube.BottomFill(orange)
+	tube.BottomFill(pink)
+	tube.BottomFill(yellow)
 
-	checkForColor(t, tube, Brown)
-	checkForColor(t, tube, Orange)
-	checkForColor(t, tube, Pink)
-	checkForColor(t, tube, Yellow)
+	checkForColor(t, &tube, brown)
+	checkForColor(t, &tube, orange)
+	checkForColor(t, &tube, pink)
+	checkForColor(t, &tube, yellow)
 }

@@ -15,9 +15,9 @@ func NewTube(name string) Tube {
 }
 
 func (t *Tube) TopColor() (Color, int) {
-	if len(t.colors) == 0 {
-		return Empty, 0
-	}
+	// if len(t.colors) == 0 {
+	// 	return Empty, 0
+	// }
 
 	amount := 0
 	for iColor := 0; iColor < len(t.colors); iColor++ {
@@ -70,6 +70,9 @@ func (destination *Tube) CanReceiveFrom(source Tube) bool {
 }
 
 func (t *Tube) IsCapped() bool {
+	if t.IsEmpty() {
+		return false
+	}
 	_, amount := t.TopColor()
 	return amount == TubeHeight
 }

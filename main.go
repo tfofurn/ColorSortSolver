@@ -10,7 +10,7 @@ import (
 	"golang.org/x/text/message"
 )
 
-func solutionListener(channels solver.Channels) {
+func solutionListener(channels solver.Channels, colorMap solver.ColorMap) {
 	remainingWorkers := 0
 	workerCount := 0
 	solutionCount := 0
@@ -26,7 +26,7 @@ func solutionListener(channels solver.Channels) {
 			if len(solution) < shortestSolution {
 				printer.Printf("Solution %d, %d steps\n", solutionCount, len(solution))
 				for index, step := range solution {
-					fmt.Printf("%4d: %s\n", index+1, step)
+					fmt.Printf("%4d: %12v × %v: %s -> %s\n", index+1, colorMap.StringFromColor(step.Color), step.Amount, step.SourceTubeName, step.DestinationTubeName)
 				}
 				shortestSolution = len(solution)
 			}
@@ -53,10 +53,11 @@ func main() {
 		fmt.Print(err)
 	}
 	fileContentsString := string(fileContents)
-	baseRack := solver.RackFromCSV(fileContentsString)
+	colorMap := solver.NewColorMap()
+	baseRack := solver.RackFromCSV(&colorMap, fileContentsString)
 
 	channels := solver.NewChannels()
 
 	baseRack.AttemptSolution(channels)
-	solutionListener(channels)
+	solutionListener(channels, colorMap)
 }

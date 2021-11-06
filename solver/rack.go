@@ -2,17 +2,16 @@ package solver
 
 import (
 	"encoding/csv"
-	"fmt"
 	"io"
 	"strings"
 )
 
 type Rack struct {
-	steps []string
+	steps []Step
 	tubes []Tube
 }
 
-func RackFromCSV(input string) Rack {
+func RackFromCSV(colorMap *ColorMap, input string) Rack {
 
 	csvReader := csv.NewReader(strings.NewReader(input))
 	tubeNames, _ := csvReader.Read()
@@ -27,23 +26,23 @@ func RackFromCSV(input string) Rack {
 			break
 		}
 		for iColor, colorName := range colors {
-			tube := tubes[iColor]
-			color := ColorFromString(colorName)
-			if color != Empty && color != UnknownColor {
+			tube := &tubes[iColor]
+			if colorName != "" {
+				color := colorMap.ColorFromString(colorName)
 				tube.BottomFill(color)
 			}
-			tubes[iColor] = tube
 		}
 	}
 
-	return Rack{make([]string, 0), tubes}
+	return Rack{make([]Step, 0), tubes}
 }
 
 func (r *Rack) Move(sourceIndex, destinationIndex int) Rack {
 	color, amount := r.tubes[sourceIndex].TopColor()
-	moveDescription := fmt.Sprintf("%12v × %v: %s -> %s", StringFromColor(color), amount, r.tubes[sourceIndex].name, r.tubes[destinationIndex].name)
+	moveDescription := Step{color, amount, r.tubes[sourceIndex].name, r.tubes[destinationIndex].name}
+	// fmt.Sprintf("%12v × %v: %s -> %s", StringFromColor(color), amount, r.tubes[sourceIndex].name, r.tubes[destinationIndex].name)
 
-	steps := make([]string, len(r.steps), len(r.steps)+1)
+	steps := make([]Step, len(r.steps), len(r.steps)+1)
 	copy(steps, r.steps)
 	steps = append(steps, moveDescription)
 	tubes := make([]Tube, len(r.tubes))

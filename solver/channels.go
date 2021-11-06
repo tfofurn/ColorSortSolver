@@ -2,9 +2,9 @@ package solver
 
 type Channels struct {
 	WorkerCount chan int
-	Solutions   chan []string
+	Solutions   chan []Step
 }
 
 func NewChannels() Channels {
-	return Channels{make(chan int), make(chan []string)}
+	return Channels{make(chan int), make(chan []Step)}
 }
