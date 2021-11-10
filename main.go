@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math"
+	"os"
+	"path/filepath"
 
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 )
 
-func solutionListener(channels solver.Channels, colorMap solver.ColorMap) {
+func solutionListener(path string, channels solver.Channels, colorMap solver.ColorMap) {
 	remainingWorkers := 0
 	workerCount := 0
 	solutionCount := 0
@@ -24,7 +26,7 @@ func solutionListener(channels solver.Channels, colorMap solver.ColorMap) {
 			solutionCount++
 
 			if len(solution) < shortestSolution {
-				printer.Printf("Solution %d, %d steps\n", solutionCount, len(solution))
+				printer.Printf("%s Solution %d, %d steps\n", path, solutionCount, len(solution))
 				for index, step := range solution {
 					fmt.Printf("%4d: %12v × %v: %s -> %s\n", index+1, colorMap.StringFromColor(step.Color), step.Amount, step.SourceTubeName, step.DestinationTubeName)
 				}
@@ -40,15 +42,15 @@ func solutionListener(channels solver.Channels, colorMap solver.ColorMap) {
 				workerCount += 1
 			}
 			if remainingWorkers == 0 {
-				printer.Printf("All solvers have exited.  %d/%d workers found a valid solution.", solutionCount, workerCount)
+				printer.Printf("%s: All solvers have exited.  %d/%d workers found a valid solution.", path, solutionCount, workerCount)
 				return
 			}
 		}
 	}
 }
 
-func main() {
-	fileContents, err := ioutil.ReadFile("sample/inciting-incident.csv")
+func processFile(inputPath string) {
+	fileContents, err := ioutil.ReadFile(inputPath)
 	if err != nil {
 		fmt.Print(err)
 	}
@@ -59,5 +61,22 @@ func main() {
 	channels := solver.NewChannels()
 
 	baseRack.AttemptSolution(channels)
-	solutionListener(channels, colorMap)
+	solutionListener(inputPath, channels, colorMap)
+}
+
+func main() {
+	executablePath, _ := filepath.Abs(os.Args[0])
+	paths := []string{filepath.Join(filepath.Dir(executablePath), "sample", "*.csv")}
+	if len(os.Args) > 1 {
+		paths = os.Args[1:]
+	}
+	for _, path := range paths {
+		matches, err := filepath.Glob(path)
+		if err != nil {
+			fmt.Println(err)
+		}
+		for _, file := range matches {
+			processFile(file)
+		}
+	}
 }

@@ -2,14 +2,12 @@
 
 Ever see those color sorting mobile games?  The starting state is a bunch of tubes, some of which are empty, others are filled with layers of colored liquid or balls or something.  You're only allowed to transfer into a tube where the top color matches the color of what you're pouring into it.  The goal is to pour from tube to tube until each tube is either empty or has only one color in it.  
 
-I bought one of these apps and breezed through most of the levels.  I got stuck for a really long time on one, but eventually solved it.  Just a few levels later, I got really stuck.  That particular app allows buying an additional empty tube, which significantly reduces the difficulty, but what fun is that?  Enter the Color Sort Solver.
+I bought one of these apps and breezed through most of the levels.  I got stuck for a really long time on one, but eventually solved it.  Just a few levels later, I got really stuck.  That particular app allows buying an additional empty tube, which significantly reduces the difficulty, but what fun is that?  Enter the Color Sort Solver!
 
 # Input format
 
-The program reads a CSV file.  The top row is interpreted as the names of the tubes.  The rest are understood to be the colors in each tube from top to bottom.  Use any color names you like!
+The program reads CSV files provided as command-line arguments.  Within each file, the top row is interpreted as the names of the tubes, and the rest are understood to be the colors in each tube from top to bottom.  Use any color names you like!  
 # Known Issues
-
-**Hardcoded input file path.** You either need to alter `main.go` or rename your file to `sample/inciting-incident.csv`.
 
 **Fixed tube height.**  There isn't any checking of the input file's line count.  If you have anything other than four rows of colors, expect bad behavior.
 
