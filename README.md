@@ -6,7 +6,10 @@ I bought one of these apps and breezed through most of the levels.  I got stuck 
 
 # Input format
 
-The program reads CSV files provided as command-line arguments.  Within each file, the top row is interpreted as the names of the tubes, and the rest are understood to be the colors in each tube from top to bottom.  Use any color names you like!  
+The program reads CSV files provided as command-line arguments.  Within each file, the top row is interpreted as the names of the tubes, and the rest are understood to be the colors in each tube from top to bottom.  Use any color names you like!  Be sure to provide tube names at the tops of empty columns to match empty tubes at the start of the puzzle!
+
+The `sample` directory contains several puzzles.  The app on my phone displays two rows of tubes, so I tend toward a `R[row]T[tube]` scheme, but the app will accept any strings.
+
 # Known Issues
 
 **Fixed tube height.**  There isn't any checking of the input file's line count.  If you have anything other than four rows of colors, expect bad behavior.
