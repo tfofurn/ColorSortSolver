@@ -2,6 +2,7 @@ package solver
 
 import (
 	"encoding/csv"
+	"fmt"
 	"io"
 	"strings"
 )
@@ -19,6 +20,8 @@ func RackFromCSV(colorMap *ColorMap, input string) Rack {
 		tubes[iTube] = NewTube(strings.TrimSpace(rawName))
 	}
 
+	colorCounts := make([]int, len(tubes))
+
 	for {
 		colors, err := csvReader.Read()
 		if err == io.EOF {
@@ -29,9 +32,17 @@ func RackFromCSV(colorMap *ColorMap, input string) Rack {
 			if colorName != "" {
 				tube := &tubes[iColor]
 				color := colorMap.ColorFromString(colorName)
+				colorCounts[color] += 1
 				tube.BottomFill(color)
 			}
 		}
+	}
+
+	for color, count := range colorCounts {
+		if count == TubeHeight || count == 0 {
+			continue
+		}
+		panic(fmt.Errorf("each color expected to appear %d times, found %d for %s", TubeHeight, count, colorMap.StringFromColor(Color(color))))
 	}
 
 	return Rack{make([]Step, 0), tubes}
