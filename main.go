@@ -4,7 +4,6 @@ import (
 	"colorsortsolver/solver"
 	"fmt"
 	"io/ioutil"
-	"math"
 	"os"
 	"path/filepath"
 
@@ -16,7 +15,7 @@ func solutionListener(path string, channels solver.Channels, colorMap solver.Col
 	remainingWorkers := 0
 	workerCount := 0
 	solutionCount := 0
-	shortestSolution := math.MaxInt
+	shortestSolution := 1000000
 
 	printer := message.NewPrinter(language.English)
 
@@ -28,7 +27,11 @@ func solutionListener(path string, channels solver.Channels, colorMap solver.Col
 			if len(solution) < shortestSolution {
 				printer.Printf("%s Solution %d, %d steps\n", path, solutionCount, len(solution))
 				for index, step := range solution {
-					fmt.Printf("%4d: %12v × %v: %s -> %s\n", index+1, colorMap.StringFromColor(step.Color), step.Amount, step.SourceTubeName, step.DestinationTubeName)
+					capped := ""
+					if step.Capped {
+						capped = "Capped!"
+					}
+					fmt.Printf("%4d: %12v × %v: %s -> %s %s\n", index+1, colorMap.StringFromColor(step.Color), step.Amount, step.SourceTubeName, step.DestinationTubeName, capped)
 				}
 				shortestSolution = len(solution)
 			}

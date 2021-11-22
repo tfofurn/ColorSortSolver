@@ -39,11 +39,8 @@ func RackFromCSV(colorMap *ColorMap, input string) Rack {
 
 func (r *Rack) Move(sourceIndex, destinationIndex int) Rack {
 	color, amount := r.tubes[sourceIndex].TopColor()
-	moveDescription := Step{color, amount, r.tubes[sourceIndex].name, r.tubes[destinationIndex].name}
 
-	steps := make([]Step, len(r.steps), len(r.steps)+1)
-	copy(steps, r.steps)
-	steps = append(steps, moveDescription)
+	
 	tubes := make([]Tube, len(r.tubes))
 	copy(tubes, r.tubes)
 	sourceTube := tubes[sourceIndex].Copy()
@@ -52,6 +49,12 @@ func (r *Rack) Move(sourceIndex, destinationIndex int) Rack {
 	destinationTube.PourIn(color, amount)
 	tubes[sourceIndex] = sourceTube
 	tubes[destinationIndex] = destinationTube
+
+	moveDescription := Step{color, amount, r.tubes[sourceIndex].name, r.tubes[destinationIndex].name, destinationTube.IsCapped()}
+
+	steps := make([]Step, len(r.steps), len(r.steps)+1)
+	copy(steps, r.steps)
+	steps = append(steps, moveDescription)
 
 	return Rack{steps: steps, tubes: tubes}
 }
