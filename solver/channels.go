@@ -6,5 +6,5 @@ type Channels struct {
 }
 
 func NewChannels() Channels {
-	return Channels{make(chan int), make(chan []Step)}
+	return Channels{make(chan int), make(chan []Step, 1024)}
 }

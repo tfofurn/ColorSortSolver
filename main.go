@@ -6,18 +6,33 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 )
+
+func describeSolution(colorMap solver.ColorMap, solution []solver.Step) string {
+	var b strings.Builder
+	for index, step := range solution {
+		capped := ""
+		if step.Capped {
+			capped = "Capped!"
+		}
+		fmt.Fprintf(&b, "%4d: %12v × %v: %s -> %s %s\n", index+1, colorMap.StringFromColor(step.Color), step.Amount, step.SourceTubeName, step.DestinationTubeName, capped)
+	}
+	return b.String()
+}
 
 func solutionListener(path string, channels solver.Channels, colorMap solver.ColorMap) {
 	remainingWorkers := 0
 	workerCount := 0
 	solutionCount := 0
 	shortestSolutionLength := 1000000
+	shortestSolutionDescription := ""
 
 	printer := message.NewPrinter(language.English)
+	printer.Printf("%s: Start!\n", path)
 
 	for {
 		select {
@@ -25,18 +40,15 @@ func solutionListener(path string, channels solver.Channels, colorMap solver.Col
 			solutionCount++
 
 			if len(solution) < shortestSolutionLength {
-				printer.Printf("%s Solution %d, %d steps\n", path, solutionCount, len(solution))
-				for index, step := range solution {
-					capped := ""
-					if step.Capped {
-						capped = "Capped!"
-					}
-					fmt.Printf("%4d: %12v × %v: %s -> %s %s\n", index+1, colorMap.StringFromColor(step.Color), step.Amount, step.SourceTubeName, step.DestinationTubeName, capped)
-				}
+				var b strings.Builder
+				printer.Fprintf(&b, "%s Solution %d, %d steps\n", path, solutionCount, len(solution))
+				b.WriteString(describeSolution(colorMap, solution))
+
+				shortestSolutionDescription = b.String()
 				shortestSolutionLength = len(solution)
 			}
 
-			if solutionCount%10 == 0 {
+			if solutionCount%10000 == 0 {
 				printer.Printf("Solution %d, %d workers outstanding\n", solutionCount, remainingWorkers)
 			}
 		case increment := <-channels.WorkerCount:
@@ -45,7 +57,8 @@ func solutionListener(path string, channels solver.Channels, colorMap solver.Col
 				workerCount += 1
 			}
 			if remainingWorkers == 0 {
-				printer.Printf("%s: All solvers have exited.  %d/%d workers found a valid solution.", path, solutionCount, workerCount)
+				printer.Printf("%s: All solvers have exited.  %d workers found %d solutions.\n", path, workerCount, solutionCount)
+				fmt.Print(shortestSolutionDescription)
 				return
 			}
 		}
@@ -64,7 +77,7 @@ func processFile(inputPath string) {
 
 	channels := solver.NewChannels()
 
-	go baseRack.AttemptSolution(channels)
+	baseRack.AttemptSolution(channels)
 	solutionListener(inputPath, channels, colorMap)
 }
 
