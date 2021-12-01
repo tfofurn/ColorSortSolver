@@ -15,7 +15,7 @@ func solutionListener(path string, channels solver.Channels, colorMap solver.Col
 	remainingWorkers := 0
 	workerCount := 0
 	solutionCount := 0
-	shortestSolution := 1000000
+	shortestSolutionLength := 1000000
 
 	printer := message.NewPrinter(language.English)
 
@@ -24,7 +24,7 @@ func solutionListener(path string, channels solver.Channels, colorMap solver.Col
 		case solution := <-channels.Solutions:
 			solutionCount++
 
-			if len(solution) < shortestSolution {
+			if len(solution) < shortestSolutionLength {
 				printer.Printf("%s Solution %d, %d steps\n", path, solutionCount, len(solution))
 				for index, step := range solution {
 					capped := ""
@@ -33,10 +33,10 @@ func solutionListener(path string, channels solver.Channels, colorMap solver.Col
 					}
 					fmt.Printf("%4d: %12v × %v: %s -> %s %s\n", index+1, colorMap.StringFromColor(step.Color), step.Amount, step.SourceTubeName, step.DestinationTubeName, capped)
 				}
-				shortestSolution = len(solution)
+				shortestSolutionLength = len(solution)
 			}
 
-			if solutionCount%1000000 == 0 {
+			if solutionCount%10 == 0 {
 				printer.Printf("Solution %d, %d workers outstanding\n", solutionCount, remainingWorkers)
 			}
 		case increment := <-channels.WorkerCount:
@@ -53,6 +53,7 @@ func solutionListener(path string, channels solver.Channels, colorMap solver.Col
 }
 
 func processFile(inputPath string) {
+	fmt.Println(inputPath)
 	fileContents, err := ioutil.ReadFile(inputPath)
 	if err != nil {
 		fmt.Print(err)
@@ -63,7 +64,7 @@ func processFile(inputPath string) {
 
 	channels := solver.NewChannels()
 
-	baseRack.AttemptSolution(channels)
+	go baseRack.AttemptSolution(channels)
 	solutionListener(inputPath, channels, colorMap)
 }
 
