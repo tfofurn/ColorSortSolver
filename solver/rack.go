@@ -49,13 +49,11 @@ func RackFromCSV(colorMap *ColorMap, input string) Rack {
 }
 
 func (r *Rack) Move(sourceIndex, destinationIndex int) Rack {
-	color, amount := r.tubes[sourceIndex].TopColor()
-
 	tubes := make([]Tube, len(r.tubes))
 	copy(tubes, r.tubes)
 	sourceTube := tubes[sourceIndex].Copy()
 	destinationTube := tubes[destinationIndex].Copy()
-	color, amount = sourceTube.PourOutTop()
+	color, amount := sourceTube.PourOutTop()
 	destinationTube.PourIn(color, amount)
 	tubes[sourceIndex] = sourceTube
 	tubes[destinationIndex] = destinationTube
@@ -97,12 +95,6 @@ func (r *Rack) AttemptSolution(channels Channels) bool {
 					}
 				}
 			}
-			if solved {
-				continue
-			}
-		}
-		if solved {
-			continue
 		}
 	}
 
