@@ -67,6 +67,11 @@ func TestSingleColor(t *testing.T) {
 			t.Fatalf("Copied single-color tube amount should be %v, got %v", topAmount, copyAmount)
 		}
 	}
+
+	if !tube.IsCapped() {
+		t.Fatal("Tube should be full, but did not report capped.")
+	}
+
 }
 
 func TestInclusion(t *testing.T) {
@@ -189,16 +194,38 @@ func checkForColor(t *testing.T, tube *Tube, expected Color) {
 	}
 }
 
+func checkSlack(t *testing.T, tube Tube, expectedSlack int) {
+	if tube.Slack() != expectedSlack {
+		t.Fatalf("Slack expected to be %v, got %v", expectedSlack, tube.Slack())
+	}
+}
+
 func TestBottomFill(t *testing.T) {
-	brown, orange, pink, yellow := Color(2), Color(3), Color(5), Color(8)
+	brown, orange, yellow := Color(2), Color(3), Color(5)
 	tube := NewTube("t")
 	tube.BottomFill(brown)
+	checkSlack(t, tube, 3)
 	tube.BottomFill(orange)
-	tube.BottomFill(pink)
+	checkSlack(t, tube, 2)
+	tube.BottomFill(orange)
+	checkSlack(t, tube, 1)
 	tube.BottomFill(yellow)
+	checkSlack(t, tube, 0)
 
-	checkForColor(t, &tube, brown)
-	checkForColor(t, &tube, orange)
-	checkForColor(t, &tube, pink)
-	checkForColor(t, &tube, yellow)
+	tubeCopy := tube.Copy()
+
+	tubes := []Tube{tube, tubeCopy}
+
+	for _, subject := range tubes {
+		checkForColor(t, &subject, brown)
+		checkSlack(t, subject, 1)
+		checkForColor(t, &subject, orange)
+		checkSlack(t, subject, 3)
+		checkForColor(t, &subject, yellow)
+		checkSlack(t, subject, 4)
+		if !subject.IsEmpty() {
+			t.Fatal("Tube should be empty by now.")
+		}
+	}
+
 }
