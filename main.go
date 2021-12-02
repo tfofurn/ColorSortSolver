@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
@@ -65,7 +66,7 @@ func solutionListener(path string, channels solver.Channels, colorMap solver.Col
 	}
 }
 
-func processFile(inputPath string) {
+func processFile(inputPath string) (elapsedMilliseconds int) {
 	fmt.Println(inputPath)
 	fileContents, err := ioutil.ReadFile(inputPath)
 	if err != nil {
@@ -77,8 +78,13 @@ func processFile(inputPath string) {
 
 	channels := solver.NewChannels()
 
+	start := time.Now()
 	baseRack.AttemptSolution(channels)
 	solutionListener(inputPath, channels, colorMap)
+	end := time.Now()
+	elapsed := int(end.Sub(start) / 1000000)
+	fmt.Printf("%s: elapsed time: %d milliseconds\n", inputPath, elapsed)
+	return elapsed
 }
 
 func main() {
@@ -87,13 +93,20 @@ func main() {
 	if len(os.Args) > 1 {
 		paths = os.Args[1:]
 	}
+	filesProcessed := 0
+	var totalTimeMillis int
 	for _, path := range paths {
 		matches, err := filepath.Glob(path)
 		if err != nil {
 			fmt.Println(err)
 		}
 		for _, file := range matches {
-			processFile(file)
+			totalTimeMillis += processFile(file)
+			filesProcessed++
 		}
+	}
+	if filesProcessed > 1 {
+		printer := message.NewPrinter(language.English)
+		printer.Printf("Processed %d files.  Total time: %d milliseconds.\n", filesProcessed, totalTimeMillis)
 	}
 }
