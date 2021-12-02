@@ -14,12 +14,8 @@ func NewTube(name string) Tube {
 	return result
 }
 
-func (t *Tube) TopColor() (Color, int) {
-	// if len(t.colors) == 0 {
-	// 	return Empty, 0
-	// }
-
-	amount := 0
+func (t *Tube) TopSection() (color Color, amount int) {
+	amount = 0
 	for iColor := 0; iColor < len(t.colors); iColor++ {
 		if t.colors[iColor] != t.colors[0] {
 			break
@@ -47,7 +43,7 @@ func (t *Tube) BottomFill(color Color) {
 }
 
 func (t *Tube) PourOutTop() (Color, int) {
-	color, amount := t.TopColor()
+	color, amount := t.TopSection()
 	t.colors = t.colors[amount:]
 	return color, amount
 }
@@ -60,8 +56,8 @@ func (destination *Tube) CanReceiveFrom(source Tube) bool {
 		return !source.IsSingleColor()
 	}
 
-	sourceColor, sourceAmount := source.TopColor()
-	destinationColor, _ := destination.TopColor()
+	sourceColor, sourceAmount := source.TopSection()
+	destinationColor, _ := destination.TopSection()
 	if sourceAmount > destination.Slack() {
 		return false
 	}
@@ -73,7 +69,7 @@ func (t *Tube) IsCapped() bool {
 	if t.IsEmpty() {
 		return false
 	}
-	_, amount := t.TopColor()
+	_, amount := t.TopSection()
 	return amount == TubeHeight
 }
 
@@ -81,7 +77,7 @@ func (t *Tube) IsSingleColor() bool {
 	if t.IsEmpty() {
 		return false
 	}
-	_, amount := t.TopColor()
+	_, amount := t.TopSection()
 	return amount == len(t.colors)
 }
 

@@ -17,10 +17,10 @@ func TestTopEmpty(t *testing.T) {
 
 	defer func() {
 		if r := recover(); r == nil {
-			t.Errorf("Asking empty tube for TopColor didn't panic")
+			t.Errorf("Asking empty tube for TopSection didn't panic")
 		}
 	}()
-	_, _ = tube.TopColor() // should panic
+	_, _ = tube.TopSection() // should panic
 }
 
 func TestSingleColor(t *testing.T) {
@@ -42,7 +42,7 @@ func TestSingleColor(t *testing.T) {
 			t.Fatal("Empty tubes should not receive from single-color tube")
 		}
 
-		topColor, topAmount := tube.TopColor()
+		topColor, topAmount := tube.TopSection()
 		if topColor != color {
 			t.Fatalf(`top color should be %v, got %v`, color, topColor)
 		}
@@ -59,7 +59,7 @@ func TestSingleColor(t *testing.T) {
 		}
 
 		copy := tube.Copy()
-		copyColor, copyAmount := copy.TopColor()
+		copyColor, copyAmount := copy.TopSection()
 		if copyColor != topColor {
 			t.Fatalf("Copied single-color tube color should be %v, got %v", topColor, copyColor)
 		}
@@ -83,7 +83,7 @@ func TestInclusion(t *testing.T) {
 	for expected := 1; expected <= 2; expected++ {
 		tube.PourIn(firstColor, 1)
 
-		topColor, topCount := tube.TopColor()
+		topColor, topCount := tube.TopSection()
 		if topColor != firstColor {
 			t.Fatalf("Top color should be %v, got %v", firstColor, topColor)
 		}
