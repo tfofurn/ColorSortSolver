@@ -69,9 +69,6 @@ func (r *Rack) Move(sourceIndex, destinationIndex int) Rack {
 
 func (r *Rack) AttemptSolution(channels Channels) bool {
 	const workerStartLen = 1
-	if len(r.steps) == workerStartLen {
-		channels.WorkerCount <- 1
-	}
 	solved := false
 	for srcIndex, srcTube := range r.tubes {
 		sourceTube := r.tubes[srcIndex]
@@ -89,6 +86,7 @@ func (r *Rack) AttemptSolution(channels Channels) bool {
 				}
 				if !solved {
 					if len(postMoveRack.steps) == workerStartLen {
+						channels.WorkerCount <- 1
 						go postMoveRack.AttemptSolution(channels)
 					} else {
 						solved = postMoveRack.AttemptSolution(channels)
