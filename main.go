@@ -29,27 +29,23 @@ func solutionListener(path string, channels solver.Channels, colorMap solver.Col
 	remainingWorkers := 0
 	workerCount := 0
 	solutionCount := 0
-	shortestSolutionLength := 1000000
-	shortestSolutionDescription := ""
+	var shortestSolution []solver.Step
+	shortestSolutionHeader := ""
 
 	printer := message.NewPrinter(language.English)
 	printer.Printf("%s: Start!\n", path)
 
-	for {
+	for done := false; !done; {
 		select {
 		case solution := <-channels.Solutions:
 			solutionCount++
 
-			if len(solution) < shortestSolutionLength {
-				var b strings.Builder
-				printer.Fprintf(&b, "%s Solution %d, %d steps\n", path, solutionCount, len(solution))
-				b.WriteString(describeSolution(colorMap, solution))
-
-				shortestSolutionDescription = b.String()
-				shortestSolutionLength = len(solution)
+			if len(shortestSolution) == 0 || len(solution) < len(shortestSolution) {
+				shortestSolution = solution
+				shortestSolutionHeader = printer.Sprintf("%s Solution %d, %d steps\n", path, solutionCount, len(solution))
 			}
 
-			if solutionCount%10000 == 0 {
+			if solutionCount%1000 == 0 {
 				printer.Printf("Solution %d, %d workers outstanding\n", solutionCount, remainingWorkers)
 			}
 		case increment := <-channels.WorkerCount:
@@ -57,13 +53,14 @@ func solutionListener(path string, channels solver.Channels, colorMap solver.Col
 			if increment > 0 {
 				workerCount += 1
 			}
+			printer.Printf("Workers: %d remaining, %d max (%d)\n", remainingWorkers, workerCount, increment)
 			if remainingWorkers == 0 {
 				printer.Printf("%s: All solvers have exited.  %d workers found %d solutions.\n", path, workerCount, solutionCount)
-				fmt.Print(shortestSolutionDescription)
-				return
+				done = true
 			}
 		}
 	}
+	printer.Print(shortestSolutionHeader)
 }
 
 func processFile(inputPath string) (elapsedMilliseconds int) {
