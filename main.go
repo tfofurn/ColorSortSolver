@@ -53,7 +53,6 @@ func solutionListener(path string, channels solver.Channels, colorMap solver.Col
 			if increment > 0 {
 				workerCount += 1
 			}
-			printer.Printf("Workers: %d remaining, %d max (%d)\n", remainingWorkers, workerCount, increment)
 			if remainingWorkers == 0 {
 				printer.Printf("%s: All solvers have exited.  %d workers found %d solutions.\n", path, workerCount, solutionCount)
 				done = true
@@ -76,7 +75,7 @@ func processFile(inputPath string) (elapsedMilliseconds int) {
 	channels := solver.NewChannels()
 
 	start := time.Now()
-	baseRack.AttemptSolution(channels)
+	go baseRack.AttemptSolution(channels)
 	solutionListener(inputPath, channels, colorMap)
 	end := time.Now()
 	elapsed := int(end.Sub(start) / 1000000)
