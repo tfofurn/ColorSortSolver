@@ -3,48 +3,52 @@ package solver
 import "fmt"
 
 type Tube struct {
-	name   string
-	colors []Color
+	name      string
+	sections  []Color
+	fillLevel int
 }
 
 const TubeHeight = 4
 
 func NewTube(name string) Tube {
-	result := Tube{name, make([]Color, 0, TubeHeight)}
+	result := Tube{name, make([]Color, TubeHeight), 0}
 	return result
 }
 
 func (t *Tube) TopSection() (color Color, amount int) {
 	amount = 0
-	for iColor := 0; iColor < len(t.colors); iColor++ {
-		if t.colors[iColor] != t.colors[0] {
+	topIndex := t.fillLevel - 1
+	for iSection := topIndex; iSection >= 0; iSection-- {
+		if t.sections[iSection] != t.sections[topIndex] {
 			break
 		}
 		amount++
 	}
-	return t.colors[0], amount
+	return t.sections[topIndex], amount
 }
 
 func (t *Tube) Slack() int {
-	return TubeHeight - len(t.colors)
+	return TubeHeight - t.fillLevel
 }
 
 func (t *Tube) PourIn(color Color, amount int) {
-	prefix := make([]Color, amount)
 	for i := 0; i < amount; i++ {
-		prefix[i] = color
+		t.sections[t.fillLevel] = color
+		t.fillLevel++
 	}
-	t.colors = append(prefix, t.colors...)
 }
 
 func (t *Tube) BottomFill(color Color) {
-	t.colors = append(t.colors, color)
-	// fmt.Printf("%v: %v\n", t.name, t.colors)
+	for iDestSection := t.fillLevel; iDestSection > 0; iDestSection-- {
+		t.sections[iDestSection] = t.sections[iDestSection-1]
+	}
+	t.sections[0] = color
+	t.fillLevel++
 }
 
 func (t *Tube) PourOutTop() (Color, int) {
 	color, amount := t.TopSection()
-	t.colors = t.colors[amount:]
+	t.fillLevel -= amount
 	return color, amount
 }
 
@@ -78,20 +82,21 @@ func (t *Tube) IsSingleColor() bool {
 		return false
 	}
 	_, amount := t.TopSection()
-	return amount == len(t.colors)
+	return amount == t.fillLevel
 }
 
 func (t *Tube) IsEmpty() bool {
-	return len(t.colors) == 0
+	return t.fillLevel == 0
 }
 
 func (t *Tube) Copy() Tube {
 	result := NewTube(t.name)
-	result.colors = make([]Color, len(t.colors))
-	copy(result.colors, t.colors)
+	result.sections = make([]Color, TubeHeight)
+	copy(result.sections, t.sections)
+	result.fillLevel = t.fillLevel
 	return result
 }
 
 func (t *Tube) Describe() string {
-	return fmt.Sprintf("{{%s: %v}}", t.name, t.colors)
+	return fmt.Sprintf("{{%s: %v}}", t.name, t.sections)
 }
