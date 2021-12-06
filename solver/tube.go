@@ -2,16 +2,16 @@ package solver
 
 import "fmt"
 
+const TubeHeight = 4
+
 type Tube struct {
 	name      string
-	sections  []Color
+	sections  [TubeHeight]Color
 	fillLevel int
 }
 
-const TubeHeight = 4
-
 func NewTube(name string) Tube {
-	result := Tube{name, make([]Color, TubeHeight), 0}
+	result := Tube{name: name}
 	return result
 }
 
@@ -70,7 +70,7 @@ func (destination *Tube) CanReceiveFrom(source Tube) bool {
 }
 
 func (t *Tube) IsCapped() bool {
-	if t.IsEmpty() {
+	if t.Slack() != 0 {
 		return false
 	}
 	_, amount := t.TopSection()
@@ -91,8 +91,7 @@ func (t *Tube) IsEmpty() bool {
 
 func (t *Tube) Copy() Tube {
 	result := NewTube(t.name)
-	result.sections = make([]Color, TubeHeight)
-	copy(result.sections, t.sections)
+	result.sections = t.sections
 	result.fillLevel = t.fillLevel
 	return result
 }
