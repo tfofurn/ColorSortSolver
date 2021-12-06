@@ -70,12 +70,33 @@ func (r *Rack) Move(sourceIndex, destinationIndex int) Rack {
 func (r *Rack) AttemptSolution(channels Channels) bool {
 	const workerStartLen = 1
 	solved := false
-	for srcIndex, srcTube := range r.tubes {
-		sourceTube := r.tubes[srcIndex]
-		if sourceTube.IsEmpty() || sourceTube.IsCapped() {
+
+	srcCandidates := make([]int, 0, len(r.tubes))
+	destCandidates := make([]int, 0, len(r.tubes))
+	emptySeen := false
+	for iTube, tube := range r.tubes {
+		if tube.IsCapped() {
 			continue
 		}
-		for destIndex, destTube := range r.tubes {
+		if tube.IsEmpty() {
+			if !emptySeen {
+				destCandidates = append(destCandidates, iTube)
+				emptySeen = true
+			}
+			continue
+		}
+		if tube.Slack() == 0 {
+			srcCandidates = append(srcCandidates, iTube)
+			continue
+		}
+		srcCandidates = append(srcCandidates, iTube)
+		destCandidates = append(destCandidates, iTube)
+	}
+
+	for _, srcIndex := range srcCandidates {
+		srcTube := r.tubes[srcIndex]
+		for _, destIndex := range destCandidates {
+			destTube := r.tubes[destIndex]
 			if srcIndex == destIndex {
 				continue
 			}
