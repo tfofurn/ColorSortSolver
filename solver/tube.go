@@ -10,8 +10,9 @@ type Tube struct {
 	fillLevel int
 }
 
-func NewTube(name string) Tube {
-	result := Tube{name: name}
+func NewTube(name string) *Tube {
+	result := new(Tube)
+	result.name = name
 	return result
 }
 
@@ -52,7 +53,7 @@ func (t *Tube) PourOutTop() (Color, int) {
 	return color, amount
 }
 
-func (destination *Tube) CanReceiveFrom(source Tube) bool {
+func (destination *Tube) CanReceiveFrom(source *Tube) bool {
 	if source.IsEmpty() || source.IsCapped() {
 		return false
 	}
@@ -73,8 +74,7 @@ func (t *Tube) IsCapped() bool {
 	if t.Slack() != 0 {
 		return false
 	}
-	_, amount := t.TopSection()
-	return amount == TubeHeight
+	return t.IsSingleColor()
 }
 
 func (t *Tube) IsSingleColor() bool {
@@ -89,7 +89,7 @@ func (t *Tube) IsEmpty() bool {
 	return t.fillLevel == 0
 }
 
-func (t *Tube) Copy() Tube {
+func (t *Tube) Copy() *Tube {
 	result := NewTube(t.name)
 	result.sections = t.sections
 	result.fillLevel = t.fillLevel
