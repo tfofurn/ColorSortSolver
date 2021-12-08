@@ -9,13 +9,13 @@ import (
 
 type Rack struct {
 	steps []Step
-	tubes []Tube
+	tubes []*Tube
 }
 
 func RackFromCSV(colorMap *ColorMap, input string) Rack {
 	csvReader := csv.NewReader(strings.NewReader(input))
 	rawTubeNames, _ := csvReader.Read()
-	tubes := make([]Tube, len(rawTubeNames))
+	tubes := make([]*Tube, len(rawTubeNames))
 	for iTube, rawName := range rawTubeNames {
 		tubes[iTube] = NewTube(strings.TrimSpace(rawName))
 	}
@@ -30,7 +30,7 @@ func RackFromCSV(colorMap *ColorMap, input string) Rack {
 		for iColor, rawColorName := range colors {
 			colorName := strings.TrimSpace(rawColorName)
 			if colorName != "" {
-				tube := &tubes[iColor]
+				tube := tubes[iColor]
 				color := colorMap.ColorFromString(colorName)
 				colorCounts[color] += 1
 				tube.BottomFill(color)
@@ -49,7 +49,7 @@ func RackFromCSV(colorMap *ColorMap, input string) Rack {
 }
 
 func (r *Rack) Move(sourceIndex, destinationIndex int) Rack {
-	tubes := make([]Tube, len(r.tubes))
+	tubes := make([]*Tube, len(r.tubes))
 	copy(tubes, r.tubes)
 	sourceTube := tubes[sourceIndex].Copy()
 	destinationTube := tubes[destinationIndex].Copy()
@@ -103,14 +103,14 @@ func (r *Rack) AttemptSolution(channels Channels) bool {
 			if destTube.CanReceiveFrom(srcTube) {
 				postMoveRack := r.Move(srcIndex, destIndex)
 				if postMoveRack.tubes[srcIndex].IsEmpty() && postMoveRack.tubes[destIndex].IsCapped() {
-					solved = postMoveRack.CheckSolved(channels)
+					solved = solved || postMoveRack.CheckSolved(channels)
 				}
 				if !solved {
 					if len(postMoveRack.steps) == workerStartLen {
 						channels.WorkerCount <- 1
 						go postMoveRack.AttemptSolution(channels)
 					} else {
-						solved = postMoveRack.AttemptSolution(channels)
+						solved = solved || postMoveRack.AttemptSolution(channels)
 					}
 				}
 			}
