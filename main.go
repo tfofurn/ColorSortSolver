@@ -64,7 +64,7 @@ func solutionListener(path string, channels solver.Channels, colorMap solver.Col
 	}
 	printer.Print(shortestSolutionHeader)
 	if printSolution {
-		fmt.Print(describeSolution(colorMap, shortestSolution))
+		printer.Print(describeSolution(colorMap, shortestSolution))
 	}
 }
 
