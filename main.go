@@ -36,20 +36,24 @@ func solutionListener(path string, channels solver.Channels, colorMap solver.Col
 	var shortestSolution []solver.Step
 	shortestSolutionHeader := ""
 
+	ticker := time.NewTicker(time.Second * 5)
+	startTime := time.Now()
+
 	printer := message.NewPrinter(language.English)
 
 	for done := false; !done; {
 		select {
+		case now := <-ticker.C:
+			if solutionCount > 0 {
+				elapsed := int(now.Sub(startTime).Seconds())
+				printer.Printf("%6d seconds elapsed.  %d Solutions found, %d workers outstanding.  Shortest found: %d\n", elapsed, solutionCount, remainingWorkers, len(shortestSolution))
+			}
 		case solution := <-channels.Solutions:
 			solutionCount++
 
 			if len(shortestSolution) == 0 || len(solution) < len(shortestSolution) {
 				shortestSolution = solution
 				shortestSolutionHeader = printer.Sprintf("%s Solution %d, %d steps\n", path, solutionCount, len(solution))
-			}
-
-			if solutionCount%100 == 0 {
-				printer.Printf("Solution %d, %d workers outstanding.  Shortest found: %d\n", solutionCount, remainingWorkers, len(shortestSolution))
 			}
 		case increment := <-channels.WorkerCount:
 			remainingWorkers += increment
@@ -62,6 +66,7 @@ func solutionListener(path string, channels solver.Channels, colorMap solver.Col
 			}
 		}
 	}
+	ticker.Stop()
 	printer.Print(shortestSolutionHeader)
 	if printSolution {
 		printer.Print(describeSolution(colorMap, shortestSolution))
