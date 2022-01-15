@@ -15,38 +15,45 @@ import (
 
 func describeSolution(colorMap solver.ColorMap, solution []solver.Step) string {
 	var b strings.Builder
+	const dividerSpacing = 5
 	for index, step := range solution {
 		capped := ""
 		if step.Capped {
 			capped = "Capped!"
 		}
 		fmt.Fprintf(&b, "%4d: %12v × %v: %s -> %s %s\n", index+1, colorMap.StringFromColor(step.Color), step.Amount, step.SourceTubeName, step.DestinationTubeName, capped)
+		if index%dividerSpacing == dividerSpacing-1 {
+			fmt.Fprintln(&b, "     -----")
+		}
 	}
 	return b.String()
 }
 
-func solutionListener(path string, channels solver.Channels, colorMap solver.ColorMap) {
+func solutionListener(path string, channels solver.Channels, colorMap solver.ColorMap, printSolution bool) {
 	remainingWorkers := 0
 	workerCount := 0
 	solutionCount := 0
 	var shortestSolution []solver.Step
 	shortestSolutionHeader := ""
 
+	ticker := time.NewTicker(time.Second * 5)
+	startTime := time.Now()
+
 	printer := message.NewPrinter(language.English)
-	printer.Printf("%s: Start!\n", path)
 
 	for done := false; !done; {
 		select {
+		case now := <-ticker.C:
+			if solutionCount > 0 {
+				elapsed := int(now.Sub(startTime).Seconds())
+				printer.Printf("%6d seconds elapsed.  %d Solutions found, %d workers outstanding.  Shortest found: %d\n", elapsed, solutionCount, remainingWorkers, len(shortestSolution))
+			}
 		case solution := <-channels.Solutions:
 			solutionCount++
 
 			if len(shortestSolution) == 0 || len(solution) < len(shortestSolution) {
 				shortestSolution = solution
 				shortestSolutionHeader = printer.Sprintf("%s Solution %d, %d steps\n", path, solutionCount, len(solution))
-			}
-
-			if solutionCount%1000 == 0 {
-				printer.Printf("Solution %d, %d workers outstanding\n", solutionCount, remainingWorkers)
 			}
 		case increment := <-channels.WorkerCount:
 			remainingWorkers += increment
@@ -59,10 +66,14 @@ func solutionListener(path string, channels solver.Channels, colorMap solver.Col
 			}
 		}
 	}
+	ticker.Stop()
 	printer.Print(shortestSolutionHeader)
+	if printSolution {
+		printer.Print(describeSolution(colorMap, shortestSolution))
+	}
 }
 
-func processFile(inputPath string) (elapsedMilliseconds int) {
+func processFile(inputPath string, printSolution bool) (elapsedMilliseconds int) {
 	fmt.Println(inputPath)
 	fileContents, err := ioutil.ReadFile(inputPath)
 	if err != nil {
@@ -76,7 +87,7 @@ func processFile(inputPath string) (elapsedMilliseconds int) {
 
 	start := time.Now()
 	go baseRack.AttemptSolution(channels)
-	solutionListener(inputPath, channels, colorMap)
+	solutionListener(inputPath, channels, colorMap, printSolution)
 	end := time.Now()
 	elapsed := int(end.Sub(start) / 1000000)
 	fmt.Printf("%s: elapsed time: %d milliseconds\n", inputPath, elapsed)
@@ -89,20 +100,21 @@ func main() {
 	if len(os.Args) > 1 {
 		paths = os.Args[1:]
 	}
-	filesProcessed := 0
+	inputFiles := make([]string, 0)
 	var totalTimeMillis int
 	for _, path := range paths {
 		matches, err := filepath.Glob(path)
 		if err != nil {
 			fmt.Println(err)
 		}
-		for _, file := range matches {
-			totalTimeMillis += processFile(file)
-			filesProcessed++
-		}
+		inputFiles = append(inputFiles, matches...)
 	}
-	if filesProcessed > 1 {
+	printSolution := len(inputFiles) == 1
+	for _, inputfile := range inputFiles {
+		totalTimeMillis += processFile(inputfile, printSolution)
+	}
+	if len(inputFiles) > 1 {
 		printer := message.NewPrinter(language.English)
-		printer.Printf("Processed %d files.  Total time: %d milliseconds.\n", filesProcessed, totalTimeMillis)
+		printer.Printf("Processed %d files.  Total time: %d milliseconds.\n", len(inputFiles), totalTimeMillis)
 	}
 }

@@ -12,7 +12,7 @@ func TestTopEmpty(t *testing.T) {
 	}
 
 	if tube.Slack() != TubeHeight {
-		t.Fatalf(`Empty tube's slack should be %d, got %d`, TubeHeight, tube.Slack())
+		t.Fatalf("Empty tube's slack should be %d, got %d", TubeHeight, tube.Slack())
 	}
 
 	defer func() {
@@ -194,7 +194,7 @@ func checkForColor(t *testing.T, tube *Tube, expected Color) {
 	}
 }
 
-func checkSlack(t *testing.T, tube Tube, expectedSlack int) {
+func checkSlack(t *testing.T, tube *Tube, expectedSlack int) {
 	if tube.Slack() != expectedSlack {
 		t.Fatalf("Slack expected to be %v, got %v", expectedSlack, tube.Slack())
 	}
@@ -214,14 +214,14 @@ func TestBottomFill(t *testing.T) {
 
 	tubeCopy := tube.Copy()
 
-	tubes := []Tube{tube, tubeCopy}
+	tubes := []*Tube{tube, tubeCopy}
 
 	for _, subject := range tubes {
-		checkForColor(t, &subject, brown)
+		checkForColor(t, subject, brown)
 		checkSlack(t, subject, 1)
-		checkForColor(t, &subject, orange)
+		checkForColor(t, subject, orange)
 		checkSlack(t, subject, 3)
-		checkForColor(t, &subject, yellow)
+		checkForColor(t, subject, yellow)
 		checkSlack(t, subject, 4)
 		if !subject.IsEmpty() {
 			t.Fatal("Tube should be empty by now.")
