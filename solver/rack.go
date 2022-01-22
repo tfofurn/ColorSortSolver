@@ -8,7 +8,7 @@ import (
 )
 
 type Rack struct {
-	steps []Step
+	steps []*Step
 	tubes []*Tube
 }
 
@@ -45,7 +45,7 @@ func RackFromCSV(colorMap *ColorMap, input string) Rack {
 		panic(fmt.Errorf("each color expected to appear %d times, found %d for %s", TubeHeight, count, colorMap.StringFromColor(Color(color))))
 	}
 
-	return Rack{make([]Step, 0), tubes}
+	return Rack{make([]*Step, 0), tubes}
 }
 
 func (r *Rack) Move(sourceIndex, destinationIndex int) Rack {
@@ -60,9 +60,9 @@ func (r *Rack) Move(sourceIndex, destinationIndex int) Rack {
 
 	moveDescription := Step{color, amount, r.tubes[sourceIndex].name, r.tubes[destinationIndex].name, destinationTube.IsCapped()}
 
-	steps := make([]Step, len(r.steps), len(r.steps)+1)
+	steps := make([]*Step, len(r.steps), len(r.steps)+1)
 	copy(steps, r.steps)
-	steps = append(steps, moveDescription)
+	steps = append(steps, &moveDescription)
 
 	return Rack{steps: steps, tubes: tubes}
 }

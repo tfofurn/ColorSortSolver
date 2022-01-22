@@ -13,7 +13,7 @@ import (
 	"golang.org/x/text/message"
 )
 
-func describeSolution(colorMap solver.ColorMap, solution []solver.Step) string {
+func describeSolution(colorMap solver.ColorMap, solution []*solver.Step) string {
 	var b strings.Builder
 	const dividerSpacing = 5
 	for index, step := range solution {
@@ -33,7 +33,7 @@ func solutionListener(path string, channels solver.Channels, colorMap solver.Col
 	remainingWorkers := 0
 	workerCount := 0
 	solutionCount := 0
-	var shortestSolution []solver.Step
+	var shortestSolution []*solver.Step
 	shortestSolutionHeader := ""
 
 	ticker := time.NewTicker(time.Second * 5)
