@@ -5,4 +5,6 @@ type Step struct {
 	Amount                              int
 	SourceTubeName, DestinationTubeName string
 	Capped                              bool
+	Previous                            *Step
+	Index                               int
 }

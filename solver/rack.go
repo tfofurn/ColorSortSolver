@@ -8,8 +8,8 @@ import (
 )
 
 type Rack struct {
-	steps []*Step
-	tubes []*Tube
+	currentStep *Step
+	tubes       []*Tube
 }
 
 func RackFromCSV(colorMap *ColorMap, input string) Rack {
@@ -45,7 +45,14 @@ func RackFromCSV(colorMap *ColorMap, input string) Rack {
 		panic(fmt.Errorf("each color expected to appear %d times, found %d for %s", TubeHeight, count, colorMap.StringFromColor(Color(color))))
 	}
 
-	return Rack{make([]*Step, 0), tubes}
+	return Rack{nil, tubes}
+}
+
+func (r *Rack) StepCount() int {
+	if r.currentStep != nil {
+		return r.currentStep.Index + 1
+	}
+	return 0
 }
 
 func (r *Rack) Move(sourceIndex, destinationIndex int) Rack {
@@ -58,13 +65,10 @@ func (r *Rack) Move(sourceIndex, destinationIndex int) Rack {
 	tubes[sourceIndex] = sourceTube
 	tubes[destinationIndex] = destinationTube
 
-	moveDescription := Step{color, amount, r.tubes[sourceIndex].name, r.tubes[destinationIndex].name, destinationTube.IsCapped()}
+	stepCount := r.StepCount()
+	moveDescription := Step{color, amount, r.tubes[sourceIndex].name, r.tubes[destinationIndex].name, destinationTube.IsCapped(), r.currentStep, stepCount}
 
-	steps := make([]*Step, len(r.steps), len(r.steps)+1)
-	copy(steps, r.steps)
-	steps = append(steps, &moveDescription)
-
-	return Rack{steps: steps, tubes: tubes}
+	return Rack{&moveDescription, tubes}
 }
 
 func (r *Rack) AttemptSolution(channels Channels) bool {
@@ -106,7 +110,7 @@ func (r *Rack) AttemptSolution(channels Channels) bool {
 					solved = solved || postMoveRack.CheckSolved(channels)
 				}
 				if !solved {
-					if len(postMoveRack.steps) == workerStartLen {
+					if postMoveRack.StepCount() == workerStartLen {
 						channels.WorkerCount <- 1
 						go postMoveRack.AttemptSolution(channels)
 					} else {
@@ -117,7 +121,7 @@ func (r *Rack) AttemptSolution(channels Channels) bool {
 		}
 	}
 
-	if len(r.steps) == workerStartLen {
+	if r.StepCount() == workerStartLen {
 		channels.WorkerCount <- -1
 	}
 	return solved
@@ -130,7 +134,7 @@ func (r *Rack) CheckSolved(channels Channels) bool {
 			return false
 		}
 	}
-	channels.Solutions <- r.steps
+	channels.Solutions <- r.currentStep
 	return true
 }
 

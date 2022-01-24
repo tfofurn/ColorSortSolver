@@ -13,9 +13,14 @@ import (
 	"golang.org/x/text/message"
 )
 
-func describeSolution(colorMap solver.ColorMap, solution []*solver.Step) string {
+func describeSolution(colorMap solver.ColorMap, lastStep *solver.Step) string {
 	var b strings.Builder
 	const dividerSpacing = 5
+	solution := make([]*solver.Step, lastStep.Index+1, lastStep.Index+1)
+	for step := lastStep; step != nil; step = step.Previous {
+		solution[step.Index] = step
+	}
+
 	for index, step := range solution {
 		capped := ""
 		if step.Capped {
@@ -33,7 +38,7 @@ func solutionListener(path string, channels solver.Channels, colorMap solver.Col
 	remainingWorkers := 0
 	workerCount := 0
 	solutionCount := 0
-	var shortestSolution []*solver.Step
+	var shortestSolution *solver.Step
 	shortestSolutionHeader := ""
 
 	ticker := time.NewTicker(time.Second * 5)
@@ -46,14 +51,14 @@ func solutionListener(path string, channels solver.Channels, colorMap solver.Col
 		case now := <-ticker.C:
 			if solutionCount > 0 {
 				elapsed := int(now.Sub(startTime).Seconds())
-				printer.Printf("%6d seconds elapsed.  %d Solutions found, %d workers outstanding.  Shortest found: %d\n", elapsed, solutionCount, remainingWorkers, len(shortestSolution))
+				printer.Printf("%6d seconds elapsed.  %d Solutions found, %d workers outstanding.  Shortest found: %d\n", elapsed, solutionCount, remainingWorkers, shortestSolution.Index+1)
 			}
 		case solution := <-channels.Solutions:
 			solutionCount++
 
-			if len(shortestSolution) == 0 || len(solution) < len(shortestSolution) {
+			if shortestSolution == nil || solution.Index < shortestSolution.Index {
 				shortestSolution = solution
-				shortestSolutionHeader = printer.Sprintf("%s Solution %d, %d steps\n", path, solutionCount, len(solution))
+				shortestSolutionHeader = printer.Sprintf("%s Solution %d, %d steps\n", path, solutionCount, shortestSolution.Index+1)
 			}
 		case increment := <-channels.WorkerCount:
 			remainingWorkers += increment
