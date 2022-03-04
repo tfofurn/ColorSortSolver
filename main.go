@@ -40,6 +40,9 @@ func solutionListener(path string, channels solver.Channels, colorMap solver.Col
 	solutionCount := 0
 	var shortestSolution *solver.Step
 	shortestSolutionHeader := ""
+	maxTerminalDepth := uint(0)
+	terminationCount := uint64(0)
+	moveCount := uint64(0)
 
 	ticker := time.NewTicker(time.Second * 5)
 	startTime := time.Now()
@@ -51,7 +54,8 @@ func solutionListener(path string, channels solver.Channels, colorMap solver.Col
 		case now := <-ticker.C:
 			if solutionCount > 0 {
 				elapsed := int(now.Sub(startTime).Seconds())
-				printer.Printf("%6d seconds elapsed.  %d Solutions found, %d workers outstanding.  Shortest found: %d\n", elapsed, solutionCount, remainingWorkers, shortestSolution.Index+1)
+				printer.Printf("%6d seconds elapsed.  %d Solutions found, %d workers outstanding.  Max Depth: %d. Moves: %d\n",
+					elapsed, solutionCount, remainingWorkers, maxTerminalDepth, moveCount)
 			}
 		case solution := <-channels.Solutions:
 			solutionCount++
@@ -69,7 +73,16 @@ func solutionListener(path string, channels solver.Channels, colorMap solver.Col
 				printer.Printf("%s: All solvers have exited.  %d workers found %d solutions.\n", path, workerCount, solutionCount)
 				done = true
 			}
+		case depth := <-channels.TerminalDepth:
+			terminationCount += 1
+			if depth > maxTerminalDepth {
+				maxTerminalDepth = depth
+			}
+
+		case moveIncrement := <-channels.MovesTried:
+			moveCount += uint64(moveIncrement)
 		}
+
 	}
 	ticker.Stop()
 	printer.Print(shortestSolutionHeader)

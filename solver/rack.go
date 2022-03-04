@@ -97,6 +97,7 @@ func (r *Rack) AttemptSolution(channels Channels) bool {
 		destCandidates = append(destCandidates, iTube)
 	}
 
+	movesTried := uint(0)
 	for _, srcIndex := range srcCandidates {
 		srcTube := r.tubes[srcIndex]
 		for _, destIndex := range destCandidates {
@@ -105,6 +106,7 @@ func (r *Rack) AttemptSolution(channels Channels) bool {
 				continue
 			}
 			if destTube.CanReceiveFrom(srcTube) {
+				movesTried++
 				postMoveRack := r.Move(srcIndex, destIndex)
 				if postMoveRack.tubes[srcIndex].IsEmpty() && postMoveRack.tubes[destIndex].IsCapped() {
 					solved = solved || postMoveRack.CheckSolved(channels)
@@ -119,6 +121,12 @@ func (r *Rack) AttemptSolution(channels Channels) bool {
 				}
 			}
 		}
+	}
+
+	if movesTried == 0 {
+		channels.TerminalDepth <- uint(r.StepCount())
+	} else {
+		channels.MovesTried <- movesTried
 	}
 
 	if r.StepCount() == workerStartLen {
