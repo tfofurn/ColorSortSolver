@@ -71,7 +71,7 @@ func (r *Rack) Move(sourceIndex, destinationIndex int) Rack {
 	return Rack{&moveDescription, tubes}
 }
 
-func (r *Rack) AttemptSolution(channels Channels) bool {
+func (r *Rack) AttemptSolution(channels *Channels) bool {
 	const workerStartLen = 1
 	solved := false
 
@@ -135,7 +135,7 @@ func (r *Rack) AttemptSolution(channels Channels) bool {
 	return solved
 }
 
-func (r *Rack) CheckSolved(channels Channels) bool {
+func (r *Rack) CheckSolved(channels *Channels) bool {
 	for index := range r.tubes {
 		tube := r.tubes[index]
 		if !(tube.IsEmpty() || tube.IsCapped()) {

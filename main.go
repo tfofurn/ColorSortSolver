@@ -104,7 +104,7 @@ func processFile(inputPath string, printSolution bool) (elapsedMilliseconds int)
 	channels := solver.NewChannels()
 
 	start := time.Now()
-	go baseRack.AttemptSolution(channels)
+	go baseRack.AttemptSolution(&channels)
 	solutionListener(inputPath, channels, colorMap, printSolution)
 	end := time.Now()
 	elapsed := int(end.Sub(start) / 1000000)
