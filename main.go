@@ -39,6 +39,7 @@ func solutionListener(path string, channels solver.Channels, colorMap solver.Col
 	workerCount := 0
 	solutionCount := 0
 	var shortestSolution *solver.Step
+	var solutionToPrint *solver.Step
 	shortestSolutionHeader := ""
 	maxTerminalDepth := uint(0)
 	terminationCount := uint64(0)
@@ -63,6 +64,13 @@ func solutionListener(path string, channels solver.Channels, colorMap solver.Col
 			if shortestSolution == nil || solution.Index < shortestSolution.Index {
 				shortestSolution = solution
 				shortestSolutionHeader = printer.Sprintf("%s Solution %d, %d steps\n", path, solutionCount, shortestSolution.Index+1)
+				if printSolution && solutionCount == 1 {
+					printer.Print(shortestSolutionHeader)
+					printer.Print(describeSolution(colorMap, shortestSolution))
+				} else {
+					solutionToPrint = solution
+				}
+
 			}
 		case increment := <-channels.WorkerCount:
 			remainingWorkers += increment
@@ -70,7 +78,6 @@ func solutionListener(path string, channels solver.Channels, colorMap solver.Col
 				workerCount += 1
 			}
 			if remainingWorkers == 0 {
-				printer.Printf("%s: All solvers have exited.  %d workers found %d solutions.\n", path, workerCount, solutionCount)
 				done = true
 			}
 		case depth := <-channels.TerminalDepth:
@@ -85,9 +92,10 @@ func solutionListener(path string, channels solver.Channels, colorMap solver.Col
 
 	}
 	ticker.Stop()
+	printer.Printf("%s: All solvers have exited.  %d workers found %d solutions.  Max Depth: %d. Moves: %d\n", path, workerCount, solutionCount, maxTerminalDepth, moveCount)
 	printer.Print(shortestSolutionHeader)
-	if printSolution {
-		printer.Print(describeSolution(colorMap, shortestSolution))
+	if printSolution && solutionToPrint != nil {
+		printer.Print(describeSolution(colorMap, solutionToPrint))
 	}
 }
 
