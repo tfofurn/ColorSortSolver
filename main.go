@@ -16,7 +16,7 @@ import (
 func describeSolution(colorMap solver.ColorMap, lastStep *solver.Step) string {
 	var b strings.Builder
 	const dividerSpacing = 5
-	solution := make([]*solver.Step, lastStep.Index+1, lastStep.Index+1)
+	solution := make([]*solver.Step, lastStep.Index+1)
 	for step := lastStep; step != nil; step = step.Previous {
 		solution[step.Index] = step
 	}
@@ -122,7 +122,7 @@ func processFile(inputPath string, printSolution bool) (elapsedMilliseconds int)
 
 func main() {
 	executablePath, _ := filepath.Abs(os.Args[0])
-	paths := []string{filepath.Join(filepath.Dir(executablePath), "sample", "*.csv")}
+	paths := []string{filepath.Join(filepath.Dir(executablePath), "sample", "**.csv")}
 	if len(os.Args) > 1 {
 		paths = os.Args[1:]
 	}
@@ -136,6 +136,9 @@ func main() {
 		inputFiles = append(inputFiles, matches...)
 	}
 	printSolution := len(inputFiles) == 1
+	if !printSolution {
+		fmt.Printf("%d files found.\n", len(inputFiles))
+	}
 	for _, inputfile := range inputFiles {
 		totalTimeMillis += processFile(inputfile, printSolution)
 	}
