@@ -38,11 +38,16 @@ func RackFromCSV(colorMap *ColorMap, input string) Rack {
 		}
 	}
 
+	miscountsFound := 0
 	for color, count := range colorCounts {
 		if count == TubeHeight || count == 0 {
 			continue
 		}
-		panic(fmt.Errorf("each color expected to appear %d times, found %d for %s", TubeHeight, count, colorMap.StringFromColor(Color(color))))
+		miscountsFound += 1
+		fmt.Printf("each color expected to appear %d times, found %d for %s\n", TubeHeight, count, colorMap.StringFromColor(Color(color)))
+	}
+	if miscountsFound > 0 {
+		panic("Color counts did not match expected.")
 	}
 
 	return Rack{nil, tubes}
