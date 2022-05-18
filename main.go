@@ -3,6 +3,7 @@ package main
 import (
 	"colorsortsolver/solver"
 	"fmt"
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -120,21 +121,8 @@ func processFile(inputPath string, printSolution bool) (elapsedMilliseconds int)
 	return elapsed
 }
 
-func main() {
-	executablePath, _ := filepath.Abs(os.Args[0])
-	paths := []string{filepath.Join(filepath.Dir(executablePath), "sample", "**.csv")}
-	if len(os.Args) > 1 {
-		paths = os.Args[1:]
-	}
-	inputFiles := make([]string, 0)
+func processFiles(inputFiles []string) {
 	var totalTimeMillis int
-	for _, path := range paths {
-		matches, err := filepath.Glob(path)
-		if err != nil {
-			fmt.Println(err)
-		}
-		inputFiles = append(inputFiles, matches...)
-	}
 	printSolution := len(inputFiles) == 1
 	if !printSolution {
 		fmt.Printf("%d files found.\n", len(inputFiles))
@@ -146,4 +134,62 @@ func main() {
 		printer := message.NewPrinter(language.English)
 		printer.Printf("Processed %d files.  Total time: %d milliseconds.\n", len(inputFiles), totalTimeMillis)
 	}
+}
+
+func getSamplePaths() []string {
+	executablePath, _ := filepath.Abs(os.Args[0])
+	sampleRoot := filepath.Join(filepath.Dir(executablePath), "sample/")
+	result := []string{}
+	filepath.WalkDir(sampleRoot, func(path string, d fs.DirEntry, err error) error {
+		if !d.IsDir() && filepath.Ext(path) == ".csv" {
+			result = append(result, path)
+		}
+		return nil
+	})
+	return result
+}
+
+func modTimeFromPath(path string) time.Time {
+	stat, err := os.Stat(path)
+	if err != nil {
+		fmt.Printf("Unable to stat %s\n", path)
+		return time.Unix(0, 0)
+	}
+	return stat.ModTime()
+}
+
+func expandGlobs(globs []string) []string {
+	result := make([]string, 0)
+	for _, path := range globs {
+		matches, err := filepath.Glob(path)
+		if err != nil {
+			fmt.Println(err)
+		}
+		result = append(result, matches...)
+	}
+	return result
+}
+
+func main() {
+	paths := make([]string, 0)
+	if len(os.Args) > 1 {
+		if os.Args[1] == "latest" {
+			samples := expandGlobs(getSamplePaths())
+			latest := samples[0]
+			latestModTime := modTimeFromPath(latest)
+			for _, candidate := range samples {
+				candidateModTime := modTimeFromPath(candidate)
+				fmt.Printf("Candidate %s mod time %s vs latest %s\n", candidate, candidateModTime, latestModTime)
+				if candidateModTime.After(latestModTime) {
+					latest = candidate
+					latestModTime = modTimeFromPath(candidate)
+				}
+			}
+			paths = []string{latest}
+		} else {
+			paths = os.Args[1:]
+		}
+	}
+	inputFiles := expandGlobs(paths)
+	processFiles(inputFiles)
 }
