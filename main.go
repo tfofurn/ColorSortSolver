@@ -174,17 +174,7 @@ func main() {
 	paths := make([]string, 0)
 	if len(os.Args) > 1 {
 		if os.Args[1] == "latest" {
-			samples := expandGlobs(getSamplePaths())
-			latest := samples[0]
-			latestModTime := modTimeFromPath(latest)
-			for _, candidate := range samples {
-				candidateModTime := modTimeFromPath(candidate)
-				fmt.Printf("Candidate %s mod time %s vs latest %s\n", candidate, candidateModTime, latestModTime)
-				if candidateModTime.After(latestModTime) {
-					latest = candidate
-					latestModTime = modTimeFromPath(candidate)
-				}
-			}
+			latest := getLatestSample()
 			paths = []string{latest}
 		} else {
 			paths = os.Args[1:]
@@ -192,4 +182,18 @@ func main() {
 	}
 	inputFiles := expandGlobs(paths)
 	processFiles(inputFiles)
+}
+
+func getLatestSample() string {
+	samples := expandGlobs(getSamplePaths())
+	latest := samples[0]
+	latestModTime := modTimeFromPath(latest)
+	for _, candidate := range samples {
+		candidateModTime := modTimeFromPath(candidate)
+		if candidateModTime.After(latestModTime) {
+			latest = candidate
+			latestModTime = modTimeFromPath(candidate)
+		}
+	}
+	return latest
 }
